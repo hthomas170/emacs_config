@@ -6,6 +6,8 @@
 * Beautify Emacs
 #+BEGIN_SRC emacs-lisp
   (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
   (add-hook 'after-init-hook (lambda () (load-theme 'spacemacs-dark t)))
 #+END_SRC
 * Custom keybindgs
@@ -14,6 +16,7 @@
   (define-key global-map [remap find-file] 'helm-find-files)
   (define-key global-map "\C-cl" 'org-store-link)
   (define-key global-map "\C-ca" 'org-agenda)
+  (global-set-key "\C-xc" (lambda () (interactive) (find-file "~/.emacs.d/config.org")))
 #+END_SRC
 * Org
 #+BEGIN_SRC emacs-lisp
@@ -21,21 +24,55 @@
   (setq org-directory "~/org")
   (setq org-agenda-files (list "todo.org" "inbox.org"))
 #+END_SRC
+* Emails
+#+BEGIN_SRC emacs-lisp
+  (require 'mu4e)
+
+  (setq mu4e-maildir "~/.mail"
+  mu4e-attachment-dir "~/Downloads")
+
+  (setq user-mail-address "hugolecomte932@protonmail.com"
+  user-full-name  "hugolecomte932")
+
+  ;; Get mail
+  (setq mu4e-get-mail-command "mbsync protonmail"
+  mu4e-change-filenames-when-moving t   ; needed for mbsync
+  mu4e-update-interval 120)             ; update every 2 minutes
+
+  ;; Send mail
+  (setq message-send-mail-function 'smtpmail-send-it
+  smtpmail-auth-credentials "~/.authinfo.gpg"
+  smtpmail-smtp-server "127.0.0.1"
+  smtpmail-stream-type 'starttls
+  smtpmail-smtp-service 1025)
+
+#+END_SRC
 * GTD
 #+BEGIN_SRC emacs-lisp
+  (require 'mu4e)
   (setq org-capture-templates
 	`(("i" "Inbox" entry (file "inbox.org")
 	   ,(concat "* TODO %?\n"
-		    "/Entered on/ %U"))))
-
-  (define-key global-map (kbd "C-c c") 'org-capture)
+		    "/Entered on/ %U"))
+	  ("@" "Inbox [mu4e]" entry (file "inbox.org")
+	   ,(concat "* TODO Process \"%a\" %?\n"
+					  "/Entered on/ %U"))))
 
   (defun org-capture-inbox ()
     (interactive)
     (call-interactively 'org-store-link)
     (org-capture nil "i"))
-  
+
+  (defun org-capture-mail ()
+    (interactive)
+    (call-interactively 'org-store-link)
+    (org-capture ni "@"))
+
+  (define-key global-map (kbd "C-c c") 'org-capture)
   (define-key global-map (kbd "C-c i") 'org-capture-inbox)
+
+  (define-key mu4e-headers-mode-map (kbd "C-c i") 'org-capture-mail)
+  (define-key mu4e-view-mode-map    (kbd "C-c i") 'org-capture-mail)
 
 #+END_SRC
 * Guix Hacking
@@ -61,7 +98,7 @@ Assuming the Guix checkout is in ~/src/guix.
   (setq user-full-name "Hugo Thomas")
   (setq user-mail-address "hugo.thomas170@protonmail.com")
   (load-file "~/src/guix/etc/copyright.el")
-
+  
   (setq copyright-names-regexp
 	(format "%s <%s>" user-full-name user-mail-address))
 #+END_SRC
@@ -103,4 +140,8 @@ I didn't really split the screen anywere
 * Utilities
 #+BEGIN_SRC emacs-lisp
   (xclip-mode 1)
+#+END_SRC
+* Dump block
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'json-mode-hook #'enable-paredit-mode)
 #+END_SRC
